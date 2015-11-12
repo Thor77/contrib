@@ -11,7 +11,7 @@ Shows lines/minute in today's znc-logs
 [znc_logs]
 user znc # or any other user/group that can read the znclog-folder
 group znc
-env.logdir /var/lib/znc/moddata/log/ # path to the log-folder with a "/" at the end
+env.logdir /var/lib/znc/moddata/log # path to the log-folder without a sep at the end
 
 =head1 COPYRIGHT
 GPL VERSION 3
@@ -30,7 +30,7 @@ if not logdir:
     raise Exception('You have to set the logdir with env.logdir <path to log> in the plugin-conf!')
 
 today = strftime('%Y-%m-%d')
-last_values_file = os.environ['MUNIN_PLUGSTATE'] + '/last_values'
+last_values_file = os.environ['MUNIN_PLUGSTATE'] + os.sep + 'last_values'
 
 
 def get_last():
