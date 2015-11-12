@@ -28,7 +28,7 @@ logdir = environ.get('logdir')
 if not logdir:
     raise Exception('You have to set the logdir with env.logdir <path to log> in the plugin-conf!')
 
-date = strftime('%Y%m%d')
+today = strftime('%Y%m%d')
 last_values_file = environ['MUNIN_PLUGSTATE'] + '/last_values'
 
 
@@ -53,7 +53,7 @@ def data():
         network, channel, file_date = filename_.split('_')
         network_channel = '{}_{}'.format(network, channel)
         # check if log is from today and it is a channel
-        if file_date == date and channel.startswith('#'):
+        if file_date == today and channel.startswith('#'):
             # current lines in the file
             current_value = sum(1 for i in open(logdir + filename, 'r', encoding='utf-8', errors='replace'))
 
