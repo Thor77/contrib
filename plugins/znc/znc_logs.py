@@ -29,7 +29,7 @@ logdir = os.environ.get('logdir')
 if not logdir:
     raise Exception('You have to set the logdir with env.logdir <path to log> in the plugin-conf!')
 
-today = strftime('%Y%m%d')
+today = strftime('%Y-%m-%d')
 last_values_file = os.environ['MUNIN_PLUGSTATE'] + '/last_values'
 
 
