@@ -21,15 +21,16 @@ Thor77 <thor77[at]thor77.org>
 '''
 from sys import argv
 from time import strftime
-from os import environ, listdir
+import os
+from glob import glob
 
-logdir = environ.get('logdir')
+logdir = os.environ.get('logdir')
 
 if not logdir:
     raise Exception('You have to set the logdir with env.logdir <path to log> in the plugin-conf!')
 
 today = strftime('%Y%m%d')
-last_values_file = environ['MUNIN_PLUGSTATE'] + '/last_values'
+last_values_file = os.environ['MUNIN_PLUGSTATE'] + '/last_values'
 
 
 def get_last():
@@ -48,34 +49,34 @@ def get_last():
 def data():
     last = get_last()
     current = {}
-    for filename in listdir(logdir):
-        filename_ = filename.replace('.log', '')
-        network, channel, file_date = filename_.split('_')
-        network_channel = '{}_{}'.format(network, channel)
-        # check if log is from today and it is a channel
-        if file_date == today and channel.startswith('#'):
-            # current lines in the file
-            current_value = sum(1 for i in open(logdir + filename, 'r', encoding='utf-8', errors='replace'))
+    logs = glob('{logdir}{sep}*{sep}*{sep}*.log'.format(logdir=logdir, sep=os.sep))
+    for log in logs:
+        network, channel, log_date = log.split(os.sep)[-3:]
+        log_date = log_date.replace('.log', '')
+        if log_date != today:
+            continue
+        current_activity = sum(
+            1
+            for i in open(log, 'r', encoding='utf-8', errors='replace')
+        )
+        network_channel_repr = '{}@{}'.format(channel, network)
+        if network_channel_repr in last:
+            last_activity = last[network_channel_repr]
+            activity = (current_activity - last_activity) / 5  # subtrate last from current and divide through 5 to get new lines / minute
+            if activity < 0:
+                activity = 0
+        else:
+            activity = 0
+        current[network_channel_repr] = activity
 
-            if network_channel not in last:
-                value = 0
-            else:
-                last_value = last[network_channel]
-                # what munin gets
-                value = (current_value - last_value) / 5  # subtrate last from current and divide through 5 to get new lines / minute
-                if value < 0:
-                    value = 0
-            # save it to the states-file
-            current[network_channel] = current_value
-
-            # print things to munin
-            network_channel = network_channel.replace('.', '').replace('#', '')
-            print('{network_channel}.label {channel}@{network}'.format(network_channel=network_channel, channel=channel, network=network))
-            print('{network_channel}.value {value}'.format(network_channel=network_channel, value=value))
+        # print munin-things
+        print('{network_channel}.label {network_channel}'.format(
+            network_channel=network_channel_repr))
+        print('{network_channel}.value {activity}'.format(
+            network_channel=network_channel_repr, activity=activity))
     with open(last_values_file, 'w') as f:
-        for k in current:
-            f.write('{}:{}\n'.format(k, current[k]))
-
+        for k, v in current.items():
+            f.write('{}:{}\n'.format(k, v))
 
 if len(argv) > 1 and argv[1] == 'config':
     print('graph_title Lines in the ZNC-log')
