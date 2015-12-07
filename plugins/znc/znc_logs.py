@@ -23,6 +23,7 @@ from sys import argv
 from time import strftime
 import os
 from glob import glob
+from os.path import exists
 
 logdir = os.environ.get('logdir')
 
@@ -34,16 +35,15 @@ last_values_file = os.environ['MUNIN_PLUGSTATE'] + os.sep + 'last_values'
 
 
 def get_last():
-    try:
-        d = {}
-        with open(last_values_file, 'r') as f:
-            for line in f:
-                line = line[:-1]
-                key, value = line.split(':')
-                d[key] = float(value)
-        return d
-    except FileNotFoundError:
+    if not exists(last_values_file):
         return {}
+    d = {}
+    with open(last_values_file, 'r') as f:
+        for line in f:
+            line = line[:-1]
+            key, value = line.split(':')
+            d[key] = float(value)
+    return d
 
 
 def data():
